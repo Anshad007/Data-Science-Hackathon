@@ -3,6 +3,9 @@ import numpy as np
 from sklearn.preprocessing import LabelEncoder
 from sklearn import model_selection
 from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import classification_report, confusion_matrix
 
 training_set = pd.read_csv('TRAINING.csv')
 training_set.fillna(0, inplace = True)
@@ -53,7 +56,7 @@ new_training_set['Troom'] = Troom
 new_training_set['Nbwashrooms'] = Nbwashrooms
 new_training_set['Nbedrooms'] = Nbedrooms
 new_training_set['Twashrooms'] = Twashrooms
-new_training_set['RoofArea'] = RoofArea
+new_training_set['Roof'] = RoofArea
 new_training_set['Lawn'] = Lawn
 new_training_set['Nfloors'] = Nfloors
 new_training_set['Api'] = Api
@@ -102,6 +105,7 @@ for i in pricest:
 new_test_set['Area'] = Areat
 new_test_set['Troom'] = Troomt
 new_test_set['Nbedrooms'] = Nbedroomst
+new_test_set['Nbwashrooms'] = Nbwashroomst
 new_test_set['Twashrooms'] = Twashroomst
 #new_test_set['roof'] = rt
 new_test_set['Roof'] = Rooft
@@ -115,11 +119,30 @@ new_test_set = pd.DataFrame(new_test_set)
 X = new_training_set.drop('Grade',axis=1)
 y = new_training_set['Grade']
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=66)
+#X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, shuffle=False)
 
-rfc = RandomForestClassifier()
-rfc.fit(X_train,y_train)
+rfc = RandomForestClassifier(n_estimators = 150, criterion="entropy")
+rfc.fit(X,y)
 
-rfc_predict = rfc.predict(X_test)
+rfc_predict = rfc.predict(new_test_set)
 
-print(rfc_predict)
+a={}
+id=[]
+for i in range (1,3300):
+    id.append(i)
+
+a['id']=pd.Series(id)
+a['Grade']=pd.Series(rfc_predict)
+a=pd.DataFrame(a)
+a.to_csv("Output.csv",index=False)
+
+
+#rfc_cv_score = cross_val_score(rfc, X, y, cv=10, scoring='roc_auc')
+print("=== Classification Report ===")
+#print(classification_report(y_test, rfc_predict))
+print('\n')
+print("=== All AUC Scores ===")
+#print(rfc_cv_score)
+print('\n')
+print("=== Mean AUC Score ===")
+print("Mean AUC Score - Random Forest: ", rfc_cv_score.mean())
